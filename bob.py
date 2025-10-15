@@ -206,8 +206,8 @@ def print_header(text):
     print("="*70)
 
 def main():
-    print("\n🔐 BOB'S TERMINAL - Secure Messaging Project")
-    print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("\n BOB'S TERMINAL - Secure Messaging Project")
+    print(f" Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     
     # TASK 1
     print_header("TASK 1: DIGITAL SIGNATURE")
@@ -219,11 +219,11 @@ def main():
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
-    print("\n📋 Bob's Public Key:")
+    print("\n Bob's Public Key:")
     print(bob_public_pem.decode())
     
     test_message = "Hello, this is Bob!"
-    print(f"\n🧪 Testing signature with message: '{test_message}'")
+    print(f"\n Testing signature with message: '{test_message}'")
     signature = ds.sign(test_message, bob_private_key)
     print(f"✓ Signature created (length: {len(signature)} bytes)")
     result = ds.verify(test_message, signature, bob_public_key)
@@ -232,20 +232,20 @@ def main():
     # TASK 2
     print_header("TASK 2: DIFFIE-HELLMAN KEY EXCHANGE")
     dh_bob = DiffieHellman()
-    print(f"\n📋 Public parameters:")
+    print(f"\n Public parameters:")
     print(f"p (first 50 digits): {str(dh_bob.p)[:50]}...")
     print(f"g (generator): {dh_bob.g}")
     
     bob_private = dh_bob.generate_private_key()
     bob_public = dh_bob.compute_public_value()
     
-    print(f"\n🔑 Bob's private key (first 20 digits): {str(bob_private)[:20]}...")
-    print(f"📤 Bob's public value (first 50 digits): {str(bob_public)[:50]}...")
+    print(f"\n Bob's private key (first 20 digits): {str(bob_private)[:20]}...")
+    print(f" Bob's public value (first 50 digits): {str(bob_public)[:50]}...")
     
     bob_dh_signature = ds.sign(str(bob_public), bob_private_key)
     print(f"\n✓ Bob signs his public value")
     
-    print("\n⏸️  Waiting for Alice to create alice_to_bob.json...")
+    print("\n⏸  Waiting for Alice to create alice_to_bob.json...")
     print("Press Enter when Alice has created the file:")
     input()
     
@@ -253,9 +253,9 @@ def main():
     try:
         with open('alice_to_bob.json', 'r') as f:
             alice_package = json.load(f)
-        print("✅ Loaded Alice's data from alice_to_bob.json")
+        print(" Loaded Alice's data from alice_to_bob.json")
     except FileNotFoundError:
-        print("❌ File alice_to_bob.json not found!")
+        print(" File alice_to_bob.json not found!")
         print("Make sure Alice has run her program and created the file.")
         return
     
@@ -278,15 +278,15 @@ def main():
         json.dump(bob_package, f)
     
     print("\n" + "─"*70)
-    print("✅ Bob's data saved to: bob_to_alice.json")
-    print("📨 Alice can now read this file!")
+    print(" Bob's data saved to: bob_to_alice.json")
+    print(" Alice can now read this file!")
     print("─"*70)
     
     if verification_result == 1:
         shared_secret = dh_bob.compute_shared_secret(alice_public)
-        print(f"\n🔐 Shared secret computed (first 50 digits): {str(shared_secret)[:50]}...")
+        print(f"\n Shared secret computed (first 50 digits): {str(shared_secret)[:50]}...")
     else:
-        print("❌ Signature verification failed!")
+        print(" Signature verification failed!")
         return
     
     # TASK 3
@@ -294,20 +294,20 @@ def main():
     iterations = 10000
     encryption_key = KeyDerivation.derive_key(shared_secret, iterations)
     print(f"✓ Derived encryption key using {iterations} iterations of SHA-256")
-    print(f"🔑 Encryption key (hex): {encryption_key.hex()}")
+    print(f" Encryption key (hex): {encryption_key.hex()}")
     
     # TASK 4
     print_header("TASK 4: PSEUDO-RANDOM NUMBER GENERATOR")
     prng = PRNG()
     print("✓ PRNG initialized")
-    print("\n📊 Random sequence (5 numbers):")
+    print("\n Random sequence (5 numbers):")
     for i in range(5):
         rand_bytes = prng.generate(8)
         rand_int = int.from_bytes(rand_bytes, byteorder='big')
         print(f"  {i+1}. {rand_int}")
     
     # Deterministic test
-    print("\n🧪 Deterministic test - Two sequences with same seed:")
+    print("\n Deterministic test - Two sequences with same seed:")
     prng1 = PRNG(12345)
     prng2 = PRNG(12345)
     
@@ -330,7 +330,7 @@ def main():
     print(f"\n✓ Sequences identical: {seq1 == seq2}")
     
     # Different seed test
-    print("\n🧪 Different seed test:")
+    print("\n Different seed test:")
     prng3 = PRNG(11111)
     prng4 = PRNG(99999)
     
@@ -357,28 +357,28 @@ def main():
     msg_prng = PRNG(int(time.time() * 1000000))
     secure_msg = SecureMessaging(encryption_key, msg_prng)
     
-    print("\n⏸️  Waiting for Alice to create alice_message_to_bob.json...")
+    print("\n⏸  Waiting for Alice to create alice_message_to_bob.json...")
     print("Press Enter when Alice has sent the message:")
     input()
     
     try:
         with open('alice_message_to_bob.json', 'r') as f:
             message_package = json.load(f)
-        print("✅ Loaded Alice's message from alice_message_to_bob.json")
+        print(" Loaded Alice's message from alice_message_to_bob.json")
     except FileNotFoundError:
-        print("❌ File alice_message_to_bob.json not found!")
+        print(" File alice_message_to_bob.json not found!")
         return
     
     iv = bytes.fromhex(message_package['iv'])
     ciphertext = bytes.fromhex(message_package['ciphertext'])
     hmac_tag = bytes.fromhex(message_package['hmac'])
     
-    print(f"\n📦 Received encrypted message:")
+    print(f"\n Received encrypted message:")
     print(f"  • IV: {iv.hex()}")
     print(f"  • Ciphertext: {ciphertext.hex()}")
     print(f"  • HMAC: {hmac_tag.hex()}")
     
-    print(f"\n🔍 Verifying HMAC...")
+    print(f"\n Verifying HMAC...")
     data_to_verify = iv + ciphertext
     computed_hmac = secure_msg.compute_hmac(data_to_verify)
     print(f"  • Computed HMAC: {computed_hmac.hex()}")
@@ -387,16 +387,16 @@ def main():
     if computed_hmac == hmac_tag:
         print("  ✓ HMAC matches!")
     else:
-        print("  ❌ HMAC does not match!")
+        print("   HMAC does not match!")
         return
     
     print(f"\n🔓 Decrypting message...")
     plaintext = secure_msg.sym_dec(ciphertext, iv)
     
-    print(f"\n✅ Message from Alice: '{plaintext.decode()}'")
+    print(f"\n Message from Alice: '{plaintext.decode()}'")
     
-    print(f"\n⏰ End timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print("\n✅ All tasks completed successfully!")
+    print(f"\n End timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("\n All tasks completed successfully!")
 
 if __name__ == "__main__":
     main()

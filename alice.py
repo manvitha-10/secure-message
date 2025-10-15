@@ -219,8 +219,8 @@ def print_header(text):
     print("="*70)
 
 def main():
-    print("\n🔐 ALICE'S TERMINAL - Secure Messaging Project")
-    print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("\n ALICE'S TERMINAL - Secure Messaging Project")
+    print(f" Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     
     # TASK 1
     print_header("TASK 1: DIGITAL SIGNATURE")
@@ -232,11 +232,11 @@ def main():
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
-    print("\n📋 Alice's Public Key:")
+    print("\n Alice's Public Key:")
     print(alice_public_pem.decode())
     
     test_message = "Hello, this is Alice!"
-    print(f"\n🧪 Testing signature with message: '{test_message}'")
+    print(f"\n Testing signature with message: '{test_message}'")
     signature = ds.sign(test_message, alice_private_key)
     print(f"✓ Signature created (length: {len(signature)} bytes)")
     result = ds.verify(test_message, signature, alice_public_key)
@@ -245,15 +245,15 @@ def main():
     # TASK 2
     print_header("TASK 2: DIFFIE-HELLMAN KEY EXCHANGE")
     dh_alice = DiffieHellman()
-    print(f"\n📋 Public parameters:")
+    print(f"\n Public parameters:")
     print(f"p (first 50 digits): {str(dh_alice.p)[:50]}...")
     print(f"g (generator): {dh_alice.g}")
     
     alice_private = dh_alice.generate_private_key()
     alice_public = dh_alice.compute_public_value()
     
-    print(f"\n🔑 Alice's private key (first 20 digits): {str(alice_private)[:20]}...")
-    print(f"📤 Alice's public value (first 50 digits): {str(alice_public)[:50]}...")
+    print(f"\n Alice's private key (first 20 digits): {str(alice_private)[:20]}...")
+    print(f" Alice's public value (first 50 digits): {str(alice_public)[:50]}...")
     
     alice_dh_signature = ds.sign(str(alice_public), alice_private_key)
     print(f"\n✓ Alice signs her public value")
@@ -269,11 +269,11 @@ def main():
         json.dump(alice_package, f)
     
     print("\n" + "─"*70)
-    print("✅ Alice's data saved to: alice_to_bob.json")
-    print("📨 Bob can now read this file!")
+    print(" Alice's data saved to: alice_to_bob.json")
+    print(" Bob can now read this file!")
     print("─"*70)
     
-    print("\n⏸️  Waiting for Bob to create bob_to_alice.json...")
+    print("\n⏸  Waiting for Bob to create bob_to_alice.json...")
     print("Press Enter when Bob has created the file:")
     input()
     
@@ -281,9 +281,9 @@ def main():
     try:
         with open('bob_to_alice.json', 'r') as f:
             bob_package = json.load(f)
-        print("✅ Loaded Bob's data from bob_to_alice.json")
+        print(" Loaded Bob's data from bob_to_alice.json")
     except FileNotFoundError:
-        print("❌ File bob_to_alice.json not found!")
+        print(" File bob_to_alice.json not found!")
         print("Make sure Bob has run his program and created the file.")
         return
     
@@ -297,9 +297,9 @@ def main():
     
     if verification_result == 1:
         shared_secret = dh_alice.compute_shared_secret(bob_public)
-        print(f"\n🔐 Shared secret computed (first 50 digits): {str(shared_secret)[:50]}...")
+        print(f"\n Shared secret computed (first 50 digits): {str(shared_secret)[:50]}...")
     else:
-        print("❌ Signature verification failed!")
+        print(" Signature verification failed!")
         return
     
     # TASK 3
@@ -307,13 +307,13 @@ def main():
     iterations = 10000
     encryption_key = KeyDerivation.derive_key(shared_secret, iterations)
     print(f"✓ Derived encryption key using {iterations} iterations of SHA-256")
-    print(f"🔑 Encryption key (hex): {encryption_key.hex()}")
+    print(f" Encryption key (hex): {encryption_key.hex()}")
     
     # TASK 4
     print_header("TASK 4: PSEUDO-RANDOM NUMBER GENERATOR")
     prng = PRNG()
     print("✓ PRNG initialized")
-    print("\n📊 Random sequence (5 numbers):")
+    print("\n Random sequence (5 numbers):")
     for i in range(5):
         rand_bytes = prng.generate(8)
         rand_int = int.from_bytes(rand_bytes, byteorder='big')
@@ -324,8 +324,8 @@ def main():
     msg_prng = PRNG(int(time.time() * 1000000))
     secure_msg = SecureMessaging(encryption_key, msg_prng)
     
-    message = input("\n📝 Enter message to send to Bob: ")
-    print(f"\n📤 Encrypting message: '{message}'")
+    message = input("\n Enter message to send to Bob: ")
+    print(f"\n Encrypting message: '{message}'")
     
     iv, ciphertext, hmac_tag = secure_msg.authenticated_encrypt(message)
     
@@ -344,12 +344,12 @@ def main():
         json.dump(message_package, f)
     
     print("\n" + "─"*70)
-    print("✅ Message saved to: alice_message_to_bob.json")
-    print("📨 Bob can now decrypt this message!")
+    print(" Message saved to: alice_message_to_bob.json")
+    print(" Bob can now decrypt this message!")
     print("─"*70)
     
-    print("\n✅ Project completed successfully!")
-    print(f"⏰ End timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("\n Project completed successfully!")
+    print(f" End timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 if __name__ == "__main__":
     main()
