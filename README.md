@@ -1,174 +1,251 @@
 # Secure Messaging System
 
-**ITIS 6200/8200 - Principles of Information Security and Privacy**  
-**Manvitha Ayinampudi**  
-**Fall 2025**
+**Course**: ITIS 6200/8200 Principles of Information Security and Privacy  
+**Project**: Secure Messaging Prototype Implementation  
+**Student**: Manvitha Ayinampudi  
+**Semester**: Fall 2025
 
-## What This Project Does
+## What This Project Is About
 
-This is a two-party secure messaging system where Alice and Bob can exchange encrypted messages. The cool part is that they can establish a shared secret key even when talking over an insecure channel (like the internet), and then use that key to encrypt their messages so no one else can read them.
+This project demonstrates a complete secure communication system between two parties (Alice and Bob). I built this to understand how real-world encrypted messaging works by implementing the fundamental cryptographic building blocks from scratch.
 
-I implemented everything we learned in class:
-- RSA digital signatures to make sure no one's pretending to be Alice or Bob
-- Diffie-Hellman to agree on a secret key without actually sending the key
-- A key derivation function to make that secret even stronger
-- AES encryption with HMAC to keep messages secret and detect tampering
+The system allows Alice and Bob to:
+- Establish a shared encryption key without ever transmitting it directly
+- Verify each other's identities to prevent impersonation
+- Exchange encrypted messages that guarantee both secrecy and tamper-detection
 
-## Quick Start
+## Repository Structure
 
-### What You Need
-- Python 3 (I used Python 3.9)
-- The `cryptography` library
+```
+secure_messaging_project/
+│
+├── alice.py                          # Alice's communication program
+├── bob.py                            # Bob's communication program
+├── README.md                         # Project documentation
+│
+├── venv/                             # Python virtual environment
+│
+└── Runtime Files (auto-generated):
+    ├── alice_to_bob.json            # Alice's signed DH public value
+    ├── bob_to_alice.json            # Bob's signed DH public value
+    └── alice_message_to_bob.json    # Encrypted message package
+```
 
-### Setup
+## Getting Started
 
+### Prerequisites
+
+You'll need Python 3.7+ installed. I developed this using Python 3.9 on macOS.
+
+### Installation Steps
+
+1. **Clone the repository**
 ```bash
-# Clone this repo
 git clone https://github.com/manvithaayinampudi/secure-messaging-project.git
 cd secure-messaging-project
+```
 
-# Set up virtual environment
+2. **Set up virtual environment**
+```bash
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-# Install the crypto library
+3. **Install dependencies**
+```bash
 pip install cryptography
 ```
 
-### Running It
+### Running the Program
 
-You need two terminal windows open side by side. Think of one as Alice and one as Bob.
+This program needs two terminal windows running simultaneously - one for Alice and one for Bob.
 
-**Terminal 1 (Alice):**
+**Terminal Window 1 (Alice's side):**
 ```bash
+cd secure_messaging_project
 source venv/bin/activate
 python alice.py
 ```
 
-**Terminal 2 (Bob):**
+**Terminal Window 2 (Bob's side):**
 ```bash
+cd secure_messaging_project
 source venv/bin/activate
 python bob.py
 ```
 
-Then just follow what the programs tell you! They'll save files to share data with each other, and you just need to press Enter at the right times.
+**Important**: Both programs communicate through JSON files that are automatically created in the project directory. Just follow the on-screen prompts and press Enter when instructed.
 
-## How It Works
+## How the Communication Works
 
-### The Process
+### The Exchange Process
 
-1. **Alice and Bob generate their keys** - Each gets their own RSA key pair for signing stuff
-2. **They do a Diffie-Hellman exchange** - This is where they agree on a shared secret without actually sending it
-3. **They sign everything** - This prevents man-in-the-middle attacks
-4. **They verify each other's signatures** - Making sure they're really talking to who they think they are
-5. **Both derive the same encryption key** - Using that shared secret
-6. **Alice sends an encrypted message** - Using AES-256 with an HMAC tag
-7. **Bob decrypts it** - After verifying the HMAC to make sure nothing was changed
+**Phase 1: Authentication Setup**
+- Both Alice and Bob generate their own RSA key pairs
+- These are used to sign messages and prove identities
 
-### Technical Details
+**Phase 2: Key Agreement**
+- Alice generates a random secret and computes her public Diffie-Hellman value
+- She signs this value and saves it to a file
+- Bob reads Alice's file, verifies her signature, and generates his own DH value
+- Bob signs his value and saves it for Alice
+- Alice reads Bob's file and verifies his signature
+- Both compute the same shared secret independently
 
-I used:
-- **RSA-2048** for digital signatures
-- **3072-bit prime** for Diffie-Hellman (the RFC 3526 one)
-- **AES-256-CBC** for encryption
-- **HMAC-SHA256** for message authentication
-- **Encrypt-then-MAC** approach (learned this is more secure than MAC-then-encrypt)
+**Phase 3: Key Strengthening**
+- Both parties run the shared secret through 10,000 rounds of SHA-256
+- This produces a strong 256-bit encryption key
 
-## Files
+**Phase 4: Message Exchange**
+- Alice encrypts her message using AES-256 in CBC mode
+- She computes an HMAC tag over the encrypted data
+- Everything is saved to a file for Bob
+- Bob verifies the HMAC before decrypting
+- Bob successfully reads the original message
 
-```
-alice.py                      # Alice's side of things
-bob.py                        # Bob's side
-README.md                     # You're reading it
-alice_to_bob.json            # Generated when running - Alice's DH data
-bob_to_alice.json            # Generated when running - Bob's DH data
-alice_message_to_bob.json    # Generated when running - encrypted message
-```
+## Implementation Details
 
-## Project Requirements
+### Task 1: RSA Digital Signatures
+I implemented a complete digital signature system:
+- **Algorithm**: RSA with 2048-bit keys
+- **Signature scheme**: PSS padding with SHA-256
+- **Purpose**: Authenticate DH public values to prevent man-in-the-middle attacks
 
-This project covers all six tasks from the assignment:
+Functions implemented:
+- `generate_keys()` - Creates RSA public/private key pair
+- `sign(message, private_key)` - Signs messages
+- `verify(message, signature, public_key)` - Verifies signatures (returns 1 for valid, 0 for invalid)
 
-**Task 1: Digital Signatures**
-- Key generation with RSA
-- Signing messages
-- Verifying signatures
+### Task 2: Diffie-Hellman Key Exchange
+Built a signed key exchange protocol:
+- **Parameters**: Using RFC 3526 Group 15 (3072-bit prime)
+- **Generator**: g = 2
+- **Security**: All public values are digitally signed
 
-**Task 2: Diffie-Hellman Key Exchange**
-- Generate DH parameters
-- Exchange public values with signatures
-- Compute shared secret
+Key functions:
+- `generate_private_key()` - Creates random secret
+- `compute_public_value()` - Computes g^secret mod p
+- `compute_shared_secret()` - Derives g^ab mod p
 
-**Task 3: Key Derivation**
-- Hash the shared secret 10,000 times with SHA-256
-- Get a strong 256-bit encryption key
+### Task 3: Key Derivation Function
+Strengthens the shared secret into an encryption key:
+- **Method**: Iterated SHA-256 hashing
+- **Iterations**: 10,000 rounds
+- **Output**: 32-byte key suitable for AES-256
 
-**Task 4: PRNG**
-- Initialize with current time
-- Generate random IVs for encryption
-- Demonstrate deterministic behavior
+This approach is similar to PBKDF2 but simplified for educational purposes.
 
-**Task 5: Secure Messaging**
-- Encrypt with AES-256-CBC
-- Compute HMAC for integrity
-- Decrypt and verify
+### Task 4: Pseudo-Random Number Generator
+Created a deterministic PRNG for generating initialization vectors:
+- **Base**: SHA-256 hash chaining
+- **Seed**: System time in microseconds
+- **Features**: Demonstrated both randomness and reproducibility
 
-**Task 6: Tampering Detection (built-in)**
-- HMAC verification catches any changes to the ciphertext
+The PRNG shows:
+- Random-looking output sequences
+- Same seed produces identical sequences (determinism)
+- Different seeds produce different sequences
 
-## Why I Made Certain Choices
+### Task 5: Authenticated Encryption
+Implemented the Encrypt-then-MAC construction:
+- **Encryption**: AES-256 in CBC mode with PKCS#7 padding
+- **MAC**: HMAC-SHA256
+- **IV**: 16 random bytes from PRNG
 
-**File-based communication instead of copy-paste:**
-I originally tried having users copy and paste JSON between terminals, but it turned out to be a pain on Mac because of how the terminal handles multiline input. Using files is way cleaner and actually makes more sense for demonstrating the concepts.
+Functions:
+- `sym_enc()` - AES-256-CBC encryption
+- `sym_dec()` - AES-256-CBC decryption
+- `compute_hmac()` - HMAC tag generation
+- `authenticated_encrypt()` - Combined encrypt + authenticate
+- `authenticated_decrypt()` - Verify + decrypt
 
-**Encrypt-then-MAC:**
-I went with encrypt-then-MAC instead of MAC-then-encrypt because that's what we discussed in class as being more secure. It prevents padding oracle attacks.
+## Why File-Based Communication?
 
-**10,000 iterations for KDF:**
-This is standard practice. Makes it really hard for someone to brute force even if they somehow get the shared secret.
+Initially, I tried implementing this with terminal copy-paste between Alice and Bob. However, I ran into issues with long JSON strings getting truncated by the terminal buffer on macOS. The file-based approach is actually cleaner because:
+- No copy-paste errors or truncation
+- Files can be easily inspected for debugging
+- Better simulates real network packet exchange
+- Easier to demonstrate for grading
 
-## Troubleshooting
+## Security Analysis
 
-**"ModuleNotFoundError: No module named 'cryptography'"**
-- Make sure you activated the virtual environment: `source venv/bin/activate`
-- Install the library: `pip install cryptography`
+**What's Protected:**
+- ✅ Message confidentiality (AES-256)
+- ✅ Message integrity (HMAC-SHA256)
+- ✅ Identity verification (RSA signatures)
+- ✅ Man-in-the-middle protection (signed DH exchange)
+- ✅ Replay attack resistance (random IVs)
 
-**"File not found" errors**
-- Both programs need to run from the same directory
-- Make sure Alice creates her file before Bob tries to read it
-- Just follow the prompts and press Enter at the right times
+**Known Limitations:**
+- This is an educational implementation, not production code
+- No certificate authority for public key distribution
+- No forward secrecy (ephemeral keys not implemented)
+- File-based communication instead of real sockets
+- Simplified PRNG (not cryptographically secure for production use)
+- No key rotation or session management
 
-**Shared secrets don't match**
-- This means something went wrong with the signature verification
-- Just restart both programs and try again
+## Common Issues and Fixes
+
+**Problem**: `ModuleNotFoundError: No module named 'cryptography'`  
+**Fix**: Activate the virtual environment first, then install: `pip install cryptography`
+
+**Problem**: "File not found" errors during execution  
+**Fix**: Make sure both programs run from the same directory and that Alice creates her file before Bob tries to read it
+
+**Problem**: Shared secrets don't match  
+**Fix**: This usually means signature verification failed. Restart both programs and make sure both successfully verify each other's signatures (should show "1")
+
+**Problem**: HMAC verification fails  
+**Fix**: Ensure both parties completed key derivation successfully and have matching encryption keys
 
 ## What I Learned
 
-Honestly, this project really helped me understand how all these cryptographic pieces fit together. In class we learned about each technique separately, but seeing how they all work together to create a secure communication channel was really cool.
+This project really connected the theory from lectures to practical implementation. Some key takeaways:
 
-The most interesting part was realizing why we need digital signatures on the Diffie-Hellman exchange. Without them, someone could intercept the exchange and do a man-in-the-middle attack. But with signatures, each party can verify they're really talking to who they think they are.
+1. **Layered security is essential** - Each cryptographic primitive solves a specific problem (signatures for authentication, DH for key agreement, AES for confidentiality, HMAC for integrity)
 
-Also learned that getting crypto right is hard! There are so many little details that matter - like making sure to verify the HMAC before decrypting, or making sure the IV is truly random.
+2. **Order matters** - Using Encrypt-then-MAC instead of MAC-then-Encrypt prevents certain attacks. Small implementation choices have big security implications.
 
-## Limitations
+3. **Key management is hard** - Even in this simplified two-party scenario, managing public keys, shared secrets, and encryption keys requires careful coordination.
 
-This is a class project, so it's not production-ready. Some things I'd need to add for real-world use:
-- Proper certificate infrastructure for distributing public keys
-- Forward secrecy (so if keys get compromised later, old messages stay safe)
-- Actual network communication instead of files
-- Better error handling
-- Key rotation
-- Protection against timing attacks
+4. **Details matter in crypto** - Things like proper padding, random IVs, and signature verification all need to be done correctly or the entire system fails.
 
-But for learning how this all works, I think it does the job pretty well!
+## Testing the Implementation
 
-## References
+To verify everything works:
 
-- Course lectures and notes from ITIS 6200/8200
-- Python cryptography library docs: https://cryptography.io/
-- RFC 3526 for the DH parameters
-- NIST recommendations for key sizes
+1. **Test signatures**: The programs should show verification returning 1 for correct keys
+2. **Check shared secrets**: Alice and Bob should compute identical shared secret values
+3. **Verify encryption keys**: Both parties should derive the same encryption key (shown in hex)
+4. **Test messaging**: Bob should successfully decrypt and display Alice's original message
 
----
+## Technologies Used
 
-Feel free to reach out if you have questions about the implementation!
+- **Python 3.9** - Main programming language
+- **cryptography library** - Provides RSA, AES, and cryptographic primitives
+- **hashlib** - SHA-256 hashing
+- **hmac** - HMAC computation
+- **secrets** - Secure random number generation
+- **json** - Data serialization for file exchange
+
+## Future Improvements
+
+If I were to extend this project:
+- Implement a proper PKI with certificate authorities
+- Add forward secrecy using ephemeral Diffie-Hellman keys
+- Replace files with actual network sockets
+- Add session management and key rotation
+- Implement perfect forward secrecy
+- Add support for multiple message exchanges
+- Include a GUI for better usability
+
+## Academic Resources
+
+- ITIS 6200/8200 Course Materials
+- Python Cryptography Documentation: https://cryptography.io/
+- RFC 3526: More Modular Exponential (MODP) Diffie-Hellman groups
+- NIST Cryptographic Standards
+
+
+
+*This project was completed as part of ITIS 6200/8200 coursework. All implementations follow course guidelines and use industry-standard cryptographic libraries.*
